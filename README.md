@@ -94,7 +94,23 @@ Hi there! You are going to make edits on a Django project. The Django project is
    ![example image](https://drive.google.com/uc?id=1VUzEJd9h8o6ppJO6JLR1f_1fEXo3gFb7)
 
 5. Finally, please upload a youtube or loom video going over a live demo with the above tasks.
+   
+![profile_update](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/5e01bb69-8c2f-4faa-8d50-566c11b54cb3)
 
+
+![submissions_withou![without_edit_button](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/aae08573-ddc3-442b-a6ba-758d2b559b16)
+t_url](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/49e86f39-09c7-4eb7-9aed-38320e93cb57)
+
+![Submissions _with_edit_button](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/d3e64428-88eb-49b1-98cc-a8589c4e6322)
+
+![submissions and comments on the user profile2](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/1312195c-953f-4aaf-a826-1338ee6a723e)
+![Submissions_with_url](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/9c2cf9b6-54f6-478c-bd1d-2ee8782c81e4)
+
+![profile_edit 2015-06-24](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/e3586424-eff0-4746-bc4c-0fd7c2eaefb3)
+
+![submissions and comments on the user profile1](https://github.com/ONJoseph/django_reddit_clone/assets/60672480/aa87c5ea-9501-404e-b7a9-02d871516a0b)
+
+Loom Video Link: https://www.loom.com/share/ade2f025929840808c2e0fd342b67f0c 
 
    <h3>Once you finish, please reach out with your repo link. You can also email me at louisa@communityone.io</h3>
 
