@@ -1,21 +1,21 @@
 import mistune
-from django.contrib.auth.models import User
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
-from django_reddit.utils.model_utils import ContentTypeAware, MttpContentTypeAware
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+from users.models import RedditUser
 
 
-
-class Submission(ContentTypeAware):
+class Submission(models.Model):
+    id = models.BigAutoField(primary_key=True)
     author_name = models.CharField(null=False, max_length=12)
-    author = models.ForeignKey('users.RedditUser')
+    author = models.ForeignKey(RedditUser, on_delete=models.CASCADE, related_name='user_submissions')
     title = models.CharField(max_length=250)
     url = models.URLField(null=True, blank=True)
     text = models.TextField(max_length=5000, blank=True)
     text_html = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     ups = models.IntegerField(default=0)
     downs = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
@@ -38,17 +38,19 @@ class Submission(ContentTypeAware):
     def comments_url(self):
         return '/comments/{}'.format(self.id)
 
-    def __unicode__(self):
-        return "<Submission:{}>".format(self.id)
+    def __str__(self):
+        return f"<Submission:{self.id}>"
 
 
-class Comment(MttpContentTypeAware):
+class Comment(MPTTModel):
+    id = models.BigAutoField(primary_key=True)
     author_name = models.CharField(null=False, max_length=12)
-    author = models.ForeignKey('users.RedditUser')
-    submission = models.ForeignKey(Submission)
+    author = models.ForeignKey(RedditUser, on_delete=models.CASCADE)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='comments')
     parent = TreeForeignKey('self', related_name='children',
-                            null=True, blank=True, db_index=True)
+                            null=True, blank=True, db_index=True, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     ups = models.IntegerField(default=0)
     downs = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
@@ -61,25 +63,21 @@ class Comment(MttpContentTypeAware):
     @classmethod
     def create(cls, author, raw_comment, parent):
         """
-        Create a new comment instance. If the parent is submisison
+        Create a new comment instance. If the parent is submission,
         update comment_count field and save it.
-        If parent is comment post it as child comment
+        If parent is comment, post it as a child comment.
         :param author: RedditUser instance
         :type author: RedditUser
         :param raw_comment: Raw comment text
         :type raw_comment: str
-        :param parent: Comment or Submission that this comment is child of
+        :param parent: Comment or Submission that this comment is a child of
         :type parent: Comment | Submission
         :return: New Comment instance
         :rtype: Comment
         """
 
         html_comment = mistune.markdown(raw_comment)
-        # todo: any exceptions possible?
-        comment = cls(author=author,
-                      author_name=author.user.username,
-                      raw_comment=raw_comment,
-                      html_comment=html_comment)
+        comment = cls(author=author, author_name=author.user.username, raw_comment=raw_comment, html_comment=html_comment)
 
         if isinstance(parent, Submission):
             submission = parent
@@ -95,14 +93,15 @@ class Comment(MttpContentTypeAware):
 
         return comment
 
-    def __unicode__(self):
-        return "<Comment:{}>".format(self.id)
+    def __str__(self):
+        return f"<Comment:{self.id}>"
 
 
 class Vote(models.Model):
-    user = models.ForeignKey('users.RedditUser')
-    submission = models.ForeignKey(Submission)
-    vote_object_type = models.ForeignKey(ContentType)
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(RedditUser, on_delete=models.CASCADE)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
+    vote_object_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     vote_object_id = models.PositiveIntegerField()
     vote_object = GenericForeignKey('vote_object_type', 'vote_object_id')
     value = models.IntegerField(default=0)
@@ -120,7 +119,7 @@ class Vote(models.Model):
         :type vote_object: Comment | Submission
         :param vote_value: Value of the vote
         :type vote_value: int
-        :return: new Vote instance
+        :return: New Vote instance
         :rtype: Vote
         """
 
@@ -131,12 +130,10 @@ class Vote(models.Model):
             submission = vote_object.submission
             vote_object.author.comment_karma += vote_value
 
-        vote = cls(user=user,
-                   vote_object=vote_object,
-                   value=vote_value)
+        vote = cls(user=user, vote_object=vote_object, value=vote_value)
 
         vote.submission = submission
-        # the value for new vote will never be 0
+        # the value for a new vote will never be 0
         # that can happen only when removing up/down vote.
         vote_object.score += vote_value
         if vote_value == 1:
