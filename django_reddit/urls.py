@@ -13,15 +13,16 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import include, url
+from django.urls import include, re_path
 from django.contrib import admin
 from django.conf import settings
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    url(settings.ADMIN_URL, include(admin.site.urls)),
+    re_path(r'^admin/', admin.site.urls),
     # url(r'^$', TemplateView.as_view(template_name='index.html'), name="home"),
     # url(r'^users/', include('users.urls')),
-    url(r'^', include("reddit.urls")),
-    url(r'^', include("users.urls"))
+    re_path(r'^', include("reddit.urls")),
+    re_path(r'^', include("users.urls")),
+    re_path('submissions/', include('submissions.urls')),
 ]

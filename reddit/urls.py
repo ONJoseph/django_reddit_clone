@@ -13,15 +13,15 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import url
-
+from django.urls import re_path
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.frontpage, name="frontpage"),
-    url(r'^comments/(?P<thread_id>[0-9]+)$', views.comments, name="thread"),
-    url(r'^submit/$', views.submit, name="submit"),
-    url(r'^post/comment/$', views.post_comment, name="post_comment"),
-    url(r'^vote/$', views.vote, name="vote"),
-
+    re_path(r'^$', views.frontpage, name="frontpage"),
+    re_path(r'^comments/(?P<thread_id>[0-9]+)$', views.comments, name="thread"),
+    re_path(r'^submit/$', views.submit, name="submit"),
+    re_path(r'^post/comment/$', views.post_comment, name="post_comment"),
+    re_path(r'^vote/$', views.vote, name="vote"),
+    re_path('user_profile/', views.user_profile, name='user_profile'),
+    re_path(r'^edit_comment/(?P<comment_id>\d+)/$', views.edit_comment, name='edit_comment'),
 ]
