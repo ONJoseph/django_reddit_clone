@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Welcome to your profile, {{ user.username }}!</h1>
+
+    <h2>{{ user.username }}</h2>
+
+    <h3>Submissions:</h3>
+    <ul>
+        {% for submission in submissions %}
+            <li><a href="{% url 'submission_detail' submission.pk %}">{{ submission.title }}</a></li>
+        {% empty %}
+            <li>No submissions yet.</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Comments:</h3>
+    <ul>
+        {% for comment in comments %}
+            <li>{{ comment.text }}</li>
+        {% empty %}
+            <li>No comments yet.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

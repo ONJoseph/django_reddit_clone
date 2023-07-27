@@ -1,19 +1,20 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 {% load humanize %}
 
 {% block content %}
-    {#    Submission block#}
+    {# Submission block #}
 
     <div class="media">
         <div class="media-left">
             <div class="vote"
                  data-what-type="submission"
                  data-what-id="{{ submission.id }}">
-                <div><i class="fa fa-chevron-up {% if  sub_vote == 1 %} upvoted {% endif %}"
+                <div><i class="fa fa-chevron-up {% if sub_vote == 1 %}upvoted{% endif %}"
                         title="upvote" onclick="vote(this)"></i>
                 </div>
                 <div class="score" title="score">{{ submission.score }}</div>
-                <div><i class="fa fa-chevron-down{% if  sub_vote == -1 %} downvoted {% endif %}"
+                <div><i class="fa fa-chevron-down{% if sub_vote == -1 %}downvoted{% endif %}"
                         title="downvote"
                         onclick="vote(this)"></i></div>
             </div>
@@ -30,32 +31,57 @@
                 </ul>
             </div>
         </div>
+    </div>
 
+    {# New comment block #}
 
-        {#    New comment block#}
-
-        <form id="commentForm" class="form-horizontal"
-              action="/post/comment/"
-              data-parent-type="submission"
-              data-parent-id="{{ submission.id }}">
-            <fieldset>
-
-                <div class="form-group comment-group">
-                    <label for="commentContent" class="col-lg-2 control-label">New comment</label>
-
-                    <div class="col-lg-10">
-                        <textarea class="form-control" rows="3" id="commentContent"></textarea>
-                        <span id="postResponse" class="text-success" style="display: none"></span>
-                    </div>
+    <form id="commentForm" class="form-horizontal"
+          action="/post/comment/"
+          data-parent-type="submission"
+          data-parent-id="{{ submission.id }}">
+        <fieldset>
+            <div class="form-group comment-group">
+                <label for="commentContent" class="col-lg-2 control-label">New comment</label>
+                <div class="col-lg-10">
+                    <textarea class="form-control" rows="3" id="commentContent"></textarea>
+                    <span id="postResponse" class="text-success" style="display: none"></span>
                 </div>
-                <div class="form-group">
-                    <div class="col-lg-10 col-lg-offset-2">
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
+            </div>
+            <div class="form-group">
+                <div class="col-lg-10 col-lg-offset-2">
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
-            </fieldset>
-        </form>
+            </div>
+        </fieldset>
+    </form>
 
-        {% include '__items/comment.html' %}
+    {# Comments block #}
+
+    {% for comment in comments %}
+        <div class="media">
+            <div class="media-left">
+                <div class="vote"
+                     data-what-type="comment"
+                     data-what-id="{{ comment.id }}">
+                    <div><i class="fa fa-chevron-up {% if comment_votes|get_item:comment.id == 1 %}upvoted{% endif %}"
+                            title="upvote" onclick="vote(this)"></i>
+                    </div>
+                    <div class="score" title="score">{{ comment.score }}</div>
+                    <div><i class="fa fa-chevron-down{% if comment_votes|get_item:comment.id == -1 %}downvoted{% endif %}"
+                            title="downvote"
+                            onclick="vote(this)"></i></div>
+                </div>
+            </div>
+            <div class="media-body">
+                <p>{{ comment.content }}</p>
+                <h6 class="thread-info">submitted {{ comment.timestamp|naturaltime }} by <a
+                        href="/user/{{ comment.author_name }}">{{ comment.author_name }}</a></h6>
+
+                {% if user.is_authenticated and user == comment.author.user %}
+                    <a href="{% url 'edit_comment' comment.id %}" class="btn btn-primary">Edit</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
 
 {% endblock %}

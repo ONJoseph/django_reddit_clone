@@ -1,0 +1,69 @@
+{% extends "public/base.html" %}
+{% load humanize %}
+
+
+{% block content %}
+    <h1>{{ submission.title }}</h1>
+    <p>{{ submission.text }}</p>
+    {% if submission.url %}
+        <p><strong>URL:</strong> <a href="{{ submission.url }}" target="_blank">{{ submission.url }}</a></p>
+    {% endif %}
+
+    <h2>Comments</h2>
+    <!-- Add a form for submitting new comments -->
+    <form method="post" action="{% url 'post_comment' %}" id="commentForm">
+        {% csrf_token %}
+        <input type="hidden" name="parentType" value="submission">
+        <input type="hidden" name="parentId" value="{{ submission.id }}">
+        <textarea name="commentContent" rows="4" cols="50" placeholder="Write your comment here"></textarea>
+        <br>
+        <button type="submit">Submit Comment</button>
+    </form>
+
+    <div id="comment-section">
+        <!-- Render existing comments here -->
+    </div>
+
+    <!-- Include jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      // Function to handle comment form submission using AJAX
+      function postComment() {
+        const parentType = "submission"; // Assuming it's a submission comment
+        const parentId = "{{ submission.id }}"; // Replace with the actual submission ID
+        const commentContent = $("#commentContent").val(); // Get the comment content from the form
+
+        // AJAX request to post the comment
+        $.post(
+          "{% url 'post_comment' %}", // Replace with the URL pattern for post_comment view
+          {
+            parentType: parentType,
+            parentId: parentId,
+            commentContent: commentContent,
+            csrfmiddlewaretoken: "{{ csrf_token }}", // Include CSRF token for security
+          },
+          function (data) {
+            // On success, update the comment section with the new comment
+            if (data.success) {
+              // Assuming data.comment contains the new comment data in JSON format
+              // Update the comment section with the new comment content
+              $("#comment-section").prepend(`
+                <div class="media">
+                  <!-- Render the new comment here using data.comment -->
+                </div>
+              `);
+              // Clear the comment input field
+              $("#commentContent").val("");
+            }
+          }
+        );
+      }
+
+      // Submit the comment form on button click
+      $("#commentForm").submit(function (event) {
+        event.preventDefault();
+        postComment();
+      });
+    </script>
+{% endblock %}
