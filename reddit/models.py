@@ -147,21 +147,21 @@ class Vote(models.Model):
         return vote
 
     def change_vote(self, new_vote_value):
-        if self.value == -1 and new_vote_value == 1:  # down to up
+        if self.value == -1 and new_vote_value == 1:
             vote_diff = 2
             self.vote_object.score += 2
             self.vote_object.ups += 1
             self.vote_object.downs -= 1
-        elif self.value == 1 and new_vote_value == -1:  # up to down
+        elif self.value == 1 and new_vote_value == -1:
             vote_diff = -2
             self.vote_object.score -= 2
             self.vote_object.ups -= 1
             self.vote_object.downs += 1
-        elif self.value == 0 and new_vote_value == 1:  # canceled vote to up
+        elif self.value == 0 and new_vote_value == 1:
             vote_diff = 1
             self.vote_object.ups += 1
             self.vote_object.score += 1
-        elif self.value == 0 and new_vote_value == -1:  # canceled vote to down
+        elif self.value == 0 and new_vote_value == -1:
             vote_diff = -1
             self.vote_object.downs += 1
             self.vote_object.score -= 1
