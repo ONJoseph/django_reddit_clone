@@ -1,13 +1,9 @@
 from django.contrib import admin
-
-# Register your models here.
-from reddit.admin import SubmissionInline
 from users.models import RedditUser
-
+from reddit.admin import SubmissionInline
 
 class RedditUserAdmin(admin.ModelAdmin):
-    inlines = [
-        SubmissionInline,
-    ]
+    # Other configurations for RedditUserAdmin
+    inlines = [SubmissionInline]
 
 admin.site.register(RedditUser, RedditUserAdmin)
