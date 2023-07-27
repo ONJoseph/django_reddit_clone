@@ -1,9 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import JsonResponse, HttpResponseBadRequest, Http404, \
-    HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseBadRequest, Http404, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaulttags import register
 
@@ -11,12 +11,12 @@ from reddit.forms import SubmissionForm
 from reddit.models import Submission, Comment, Vote
 from reddit.utils.helpers import post_only
 from users.models import RedditUser
-
+from django.urls import reverse
 
 @register.filter
 def get_item(dictionary, key):  # pragma: no cover
     """
-    Needed because there's no built in .get in django templates
+    Needed because there's no built-in .get in Django templates
     when working with dictionaries.
 
     :param dictionary: python dictionary
@@ -25,14 +25,11 @@ def get_item(dictionary, key):  # pragma: no cover
     """
     return dictionary.get(key)
 
-
 def frontpage(request):
     """
-    Serves frontpage and all additional submission listings
-    with maximum of 25 submissions per page.
+    Serves the frontpage and all additional submission listings
+    with a maximum of 25 submissions per page.
     """
-    # TODO: Serve user votes on submissions too.
-
     all_submissions = Submission.objects.order_by('-score').all()
     paginator = Paginator(all_submissions, 25)
 
@@ -45,54 +42,53 @@ def frontpage(request):
         submissions = paginator.page(paginator.num_pages)
 
     submission_votes = {}
-
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
+        reddit_user = RedditUser.objects.get(user=request.user)
         for submission in submissions:
             try:
                 vote = Vote.objects.get(
-                    vote_object_type=submission.get_content_type(),
+                    vote_object_type=ContentType.objects.get_for_model(submission),
                     vote_object_id=submission.id,
-                    user=RedditUser.objects.get(user=request.user))
+                    user=reddit_user)
                 submission_votes[submission.id] = vote.value
             except Vote.DoesNotExist:
                 pass
 
-    return render(request, 'public/frontpage.html', {'submissions'     : submissions,
-                                                     'submission_votes': submission_votes})
+    # Ensure submission_votes is a dictionary
+    if not isinstance(submission_votes, dict):
+        submission_votes = {}
 
+    return render(request, 'public/frontpage.html', {'submissions': submissions, 'submission_votes': submission_votes})
+
+def submission_detail(request, submission_id):
+    """
+    Handles the detailed submission page.
+    """
+    submission = get_object_or_404(Submission, id=submission_id)
+    return render(request, 'public/submission_detail.html', {'submission': submission})
 
 def comments(request, thread_id=None):
     """
     Handles comment view when user opens the thread.
     On top of serving all comments in the thread it will
     also return all votes user made in that thread
-    so that we can easily update comments in template
-    and display via css whether user voted or not.
+    so that we can easily update comments in the template
+    and display via CSS whether user voted or not.
 
-    :param thread_id: Thread ID as it's stored in database
+    :param thread_id: Thread ID as it's stored in the database
     :type thread_id: int
     """
-
     this_submission = get_object_or_404(Submission, id=thread_id)
-
     thread_comments = Comment.objects.filter(submission=this_submission)
 
-    if request.user.is_authenticated():
-        try:
-            reddit_user = RedditUser.objects.get(user=request.user)
-        except RedditUser.DoesNotExist:
-            reddit_user = None
-    else:
-        reddit_user = None
-
+    reddit_user = RedditUser.objects.get(user=request.user) if request.user.is_authenticated else None
     sub_vote_value = None
     comment_votes = {}
 
     if reddit_user:
-
         try:
             vote = Vote.objects.get(
-                vote_object_type=this_submission.get_content_type(),
+                vote_object_type=ContentType.objects.get_for_model(this_submission),
                 vote_object_id=this_submission.id,
                 user=reddit_user)
             sub_vote_value = vote.value
@@ -100,24 +96,17 @@ def comments(request, thread_id=None):
             pass
 
         try:
-            user_thread_votes = Vote.objects.filter(user=reddit_user,
-                                                    submission=this_submission)
-
+            user_thread_votes = Vote.objects.filter(user=reddit_user, submission=this_submission)
             for vote in user_thread_votes:
                 comment_votes[vote.vote_object.id] = vote.value
         except:
             pass
 
-    return render(request, 'public/comments.html',
-                  {'submission'   : this_submission,
-                   'comments'     : thread_comments,
-                   'comment_votes': comment_votes,
-                   'sub_vote'     : sub_vote_value})
-
+    return render(request, 'public/comments.html', {'submission': this_submission, 'comments': thread_comments, 'comment_votes': comment_votes, 'sub_vote': sub_vote_value})
 
 @post_only
 def post_comment(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return JsonResponse({'msg': "You need to log in to post new comments."})
 
     parent_type = request.POST.get('parentType', None)
@@ -166,7 +155,7 @@ def vote(request):
     # client side by the javascript instead of waiting for a refresh.
     vote_diff = 0
 
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return HttpResponseForbidden()
     else:
         user = RedditUser.objects.get(user=request.user)
@@ -256,3 +245,32 @@ def submit(request):
             return redirect('/comments/{}'.format(submission.id))
 
     return render(request, 'public/submit.html', {'form': submission_form})
+
+@login_required
+def user_profile(request):
+    user = request.user
+    submissions = user.submission_set.all()  # Assuming the Submission model has a ForeignKey to the User model.
+    comments = Comment.objects.filter(user=user)
+    return render(request, 'public/user_profile.html', {'user': user, 'submissions': submissions, 'comments': comments})
+
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if request.user == comment.user:
+        if request.method == 'POST':
+            # Update the comment content here
+            new_content = request.POST.get('content', '')  # Get the new content from the form
+            comment.content = new_content
+            comment.save()
+            return redirect('user_profile')  # Redirect to the user profile page after saving changes
+        else:
+            return render(request, 'public/edit_comment.html', {'comment': comment})
+    else:
+        # Handle unauthorized access here (e.g., redirect to an error page)
+        pass
+    
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    # Add your logic here for editing the comment
+    return render(request, 'public/edit_comment.html', {'comment': comment})

@@ -1,41 +1,50 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 {% load humanize %}
 
 {% block content %}
-
     <table>
         <tbody>
-        {% for submission in submissions %}
-            <tr>
-                <td>
-                    <div class="vote"
-                         data-what-type="submission"
-                         data-what-id="{{ submission.id }}">
-                        {% with vote_value=submission_votes|get_item:submission.id %}
-                            <div><i class="fa fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
-                                    title="upvote" onclick="vote(this)"></i>
-                            </div>
-                            <div class="score" title="score">{{ submission.score }}</div>
-                            <div><i class="fa fa-chevron-down{% if  vote_value == -1 %} downvoted {% endif %}"
-                                    title="downvote"
-                                    onclick="vote(this)"></i></div>
-                        {% endwith %}
-                    </div>
-                </td>
-                <td class="info-container">
-                    <a class="thread-title" href="{{ submission.linked_url }}">{{ submission.title }}</a>
-                    <br>
-                    <h6 class="thread-info">submitted {{ submission.timestamp|naturaltime }} by <a
-                            href="/user/{{ submission.author_name }}">{{ submission.author_name }}</a></h6>
-
-                    <ul class="buttons">
-                        <li><a href="{{ submission.comments_url }}">{{ submission.comment_count }} comments</a></li>
-                    </ul>
-
-
-                </td>
-            </tr>
-        {% endfor %}
+            {% for submission in submissions %}
+                <tr>
+                    <td>
+                        <div class="vote"
+                             data-what-type="submission"
+                             data-what-id="{{ submission.id }}">
+                            {% with vote_value=submission_votes|get_item:submission.id %}
+                                {% if vote_value is not None %}
+                                    <div><i class="fa fa-chevron-up {% if vote_value == 1 %}upvoted{% endif %}"
+                                            title="upvote" onclick="vote(this)"></i></div>
+                                    <div class="score" title="score">{{ submission.score }}</div>
+                                    <div><i class="fa fa-chevron-down{% if vote_value == -1 %}downvoted{% endif %}"
+                                            title="downvote"
+                                            onclick="vote(this)"></i></div>
+                                {% else %}
+                                    <div><i class="fa fa-chevron-up" title="upvote" onclick="vote(this)"></i></div>
+                                    <div class="score" title="score">{{ submission.score }}</div>
+                                    <div><i class="fa fa-chevron-down" title="downvote" onclick="vote(this)"></i></div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </td>
+                    <td class="info-container">
+                        {% if submission.url %}
+                            <!-- Display the URL as an additional line -->
+                            <h2><a href="{{ submission.url }}" target="_blank">{{ submission.title }}</a></h2>
+                            <p><strong>URL:</strong> <a href="{{ submission.url }}" target="_blank">{{ submission.url }}</a></p>
+                        {% else %}
+                            <!-- Direct the user to the detailed submission page if there's no URL -->
+                            <h2><a href="{% url 'submission_detail' submission.id %}">{{ submission.title }}</a></h2>
+                        {% endif %}
+                        <br>
+                        <h6 class="thread-info">submitted {{ submission.timestamp|naturaltime }} by <a
+                                href="/user/{{ submission.author_name }}">{{ submission.author_name }}</a></h6>
+                        <ul class="buttons">
+                            <li><a href="{{ submission.comments_url }}">{{ submission.comment_count }} comments</a></li>
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 
@@ -56,5 +65,48 @@
             {% endif %}
         </ul>
     </nav>
+
+    <!-- Include jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      // Function to handle comment form submission using AJAX
+      function postComment() {
+        const parentType = "submission"; // Assuming it's a submission comment
+        const parentId = "{{ submission.id }}"; // Replace with the actual submission ID
+        const commentContent = $("#commentContent").val(); // Get the comment content from the form
+
+        // AJAX request to post the comment
+        $.post(
+          "{% url 'post_comment' %}", // Replace with the URL pattern for post_comment view
+          {
+            parentType: parentType,
+            parentId: parentId,
+            commentContent: commentContent,
+            csrfmiddlewaretoken: "{{ csrf_token }}", // Include CSRF token for security
+          },
+          function (data) {
+            // On success, update the comment section with the new comment
+            if (data.success) {
+              // Assuming data.comment contains the new comment data in JSON format
+              // Update the comment section with the new comment content
+              $("#comment-section").prepend(`
+                <div class="media">
+                  <!-- Render the new comment here using data.comment -->
+                </div>
+              `);
+              // Clear the comment input field
+              $("#commentContent").val("");
+            }
+          }
+        );
+      }
+
+      // Submit the comment form on button click
+      $("#commentForm").submit(function (event) {
+        event.preventDefault();
+        postComment();
+      });
+    </script>
 
 {% endblock %}

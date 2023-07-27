@@ -4,19 +4,35 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, Http404
 from django.shortcuts import render, redirect, get_object_or_404
-
+from comments.forms import CommentForm
+from reddit.models import Submission, Comment
 from reddit.forms import UserForm, ProfileForm
 from reddit.utils.helpers import post_only
 from users.models import RedditUser
+from reddit.models import Submission, Comment
 
 
+@login_required
 def user_profile(request, username):
     user = get_object_or_404(User, username=username)
     profile = RedditUser.objects.get(user=user)
 
-    return render(request, 'public/profile.html', {'profile': profile})
+    # Fetch user's submissions and comments
+    submissions = Submission.objects.filter(author=profile).order_by('-created_at')
+    comments = Comment.objects.filter(author=profile).order_by('-timestamp')
 
+    # Fetch signed-in user's submissions and comments
+    user_submissions = Submission.objects.filter(author=request.user.reddituser).order_by('-created_at')
+    user_comments = Comment.objects.filter(author=request.user.reddituser).order_by('-created_at')
 
+    return render(request, 'public/profile.html', {
+        'profile': profile,
+        'submissions': submissions,
+        'comments': comments,
+        'user_submissions': user_submissions,
+        'user_comments': user_comments,
+    })
+    
 @login_required
 def edit_profile(request):
     user = RedditUser.objects.get(user=request.user)
@@ -36,6 +52,20 @@ def edit_profile(request):
 
     return render(request, 'private/edit_profile.html', {'form': profile_form})
 
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id, author=request.user)
+
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST, instance=comment)
+        if comment_form.is_valid():
+            comment_form.save()
+            messages.success(request, "Comment updated successfully.")
+            return redirect('frontpage')
+    else:
+        comment_form = CommentForm(instance=comment)
+
+    return render(request, 'private/edit_comment.html', {'comment_form': comment_form})
 
 def user_login(request):
     """
