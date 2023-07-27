@@ -1,88 +1,117 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6">
-                <div class="well profile">
-                    <div class="col-sm-12">
-                        <div class="col-xs-12 col-sm-8">
-                            <h2>{% if profile.first_name %}{{ profile.first_name }}{% endif %}
-                                {% if profile.last_name %}{{ profile.last_name }} {% endif %}
-                                <small>({{ profile.user.username }})</small>
-                            </h2>
 
-                            <p><strong>About: </strong></p>
+<div class="container">
+    <div class="row">
+        <div class="col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6">
+            <div class="well profile">
+                <div class="col-sm-12">
+                    <div class="col-xs-12 col-sm-8">
+                        <h2>{% if profile.first_name %}{{ profile.first_name }}{% endif %}
+                            {% if profile.last_name %}{{ profile.last_name }} {% endif %}
+                            <small>({{ profile.user.username }})</small>
+                        </h2>
 
-                            <p>
-                                {% if profile.about_html %}
-                                {{ profile.about_html|safe }}
-                                {% else %}
-                                <p>User has not entered anything here</p>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-xs-12 col-sm-4 text-center">
-                            <figure>
-                                {% if profile.display_picture %}
-                                    <img src="http://www.gravatar.com/avatar/{{ profile.gravatar_hash }}?s=200&d=mm"
-                                         alt="" class="img-circle img-responsive">
-                                {% else %}
-                                    <img src="http://www.gravatar.com/avatar/?s=200&d=mm"
-                                         alt="" class="img-circle img-responsive">
-                                {% endif %}
-                            </figure>
+                        <p><strong>About: </strong></p>
 
-                            <br>
-                            {% if profile.homepage %}
-                                <a class="btn btn-default btn-home btn-sm"
-                                   href="{{ profile.homepage }}">
-                                    <i class="fa fa-home"></i>
-                                </a>
-                            {% endif %}
-
-                            {% if profile.twitter %}
-                                <a class="btn btn-primary btn-twitter btn-sm"
-                                   href="https://twitter.com/{{ profile.twitter }}">
-                                    <i class="fa fa-twitter"></i>
-                                </a>
-                            {% endif %}
-
-                            {% if profile.github %}
-                                <a class="btn btn-default btn-sm"
-                                   href="https://github.com/{{ profile.github }}">
-                                    <i class="fa fa-github"></i>
-                                </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-xs-12 divider text-center">
-                        <div class="col-xs-12 col-sm-4 emphasis">
-
-                            <h2><strong> {{ profile.comment_karma }} </strong></h2>
-
-                            <p>Comment karma</p>
-                        </div>
-                        <div class="col-xs-12 col-sm-4 emphasis">
-                            <h2><strong>{{ profile.link_karma }}</strong></h2>
-
-                            <p>Link karma</p>
-                        </div>
-                        <div class="col-xs-12 col-sm-4 emphasis">
-                            <br>
-                            {% if profile.user == user %}
-                                <a type="button" class="btn btn-primary" href="/profile/edit"><span
-                                        class="fa fa-gear"></span> Edit</a>
+                        <p>
+                            {% if profile.about_html %}
+                            {{ profile.about_html|safe }}
                             {% else %}
-                                <a class="btn btn-success" href="/messages/compose?to={{ profile.user.username }}">
-                                    <span class="fa fa-envelope-o"></span> Message </a>
+                            <p>User has not entered anything here</p>
                             {% endif %}
-                        </div>
+                        </p>
+                    </div>
+                    <div class="col-xs-12 col-sm-4 text-center">
+                        <figure>
+                            {% if profile.display_picture %}
+                                <img src="http://www.gravatar.com/avatar/{{ profile.gravatar_hash }}?s=200&d=mm"
+                                     alt="" class="img-circle img-responsive">
+                            {% else %}
+                                <img src="http://www.gravatar.com/avatar/?s=200&d=mm"
+                                     alt="" class="img-circle img-responsive">
+                            {% endif %}
+                        </figure>
+
+                        <br>
+                        {% if profile.homepage %}
+                            <a class="btn btn-default btn-home btn-sm"
+                               href="{{ profile.homepage }}">
+                                <i class="fa fa-home"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if profile.twitter %}
+                            <a class="btn btn-primary btn-twitter btn-sm"
+                               href="https://twitter.com/{{ profile.twitter }}">
+                                <i class="fa fa-twitter"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if profile.github %}
+                            <a class="btn btn-default btn-sm"
+                               href="https://github.com/{{ profile.github }}">
+                                <i class="fa fa-github"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-xs-12 divider text-center">
+                    <div class="col-xs-12 col-sm-4 emphasis">
+
+                        <h2><strong> {{ profile.comment_karma }} </strong></h2>
+
+                        <p>Comment karma</p>
+                    </div>
+                    <div class="col-xs-12 col-sm-4 emphasis">
+                        <h2><strong>{{ profile.link_karma }}</strong></h2>
+
+                        <p>Link karma</p>
+                    </div>
+                    <div class="col-xs-12 col-sm-4 emphasis">
+                        <br>
+                        {% if profile.user == user %}
+                            <a type="button" class="btn btn-primary" href="/profile/edit"><span
+                                    class="fa fa-gear"></span> Edit</a>
+                        {% else %}
+                            <a class="btn btn-success" href="/messages/compose?to={{ profile.user.username }}">
+                                <span class="fa fa-envelope-o"></span> Message </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="col-md-4">
+        <h3>Your Submissions</h3>
+        <ul>
+            {% for submission in user_submissions %}
+                <li>
+                    <a href="{{ submission.linked_url }}">{{ submission.title }}</a>
+                    ({{ submission.created_at|date:"F d, Y H:i" }})
+                    {% if submission.url %}
+                        <a href="{{ submission.url }}">[URL]</a>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li>No submissions yet.</li>
+            {% endfor %}
+        </ul>
+
+        <h3>Your Comments</h3>
+        <ul>
+            {% for comment in user_comments %}
+                <li>
+                    {{ comment.raw_comment }}
+                    ({{ comment.timestamp|date:"F d, Y H:i" }})
+                </li>
+            {% empty %}
+                <li>No comments yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 
 {% endblock %}

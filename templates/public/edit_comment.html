@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+
+{% block content %}
+    <h1>Edit Comment</h1>
+    <form method="post">
+        {% csrf_token %}
+        <textarea name="content" cols="30" rows="10">{{ comment.content }}</textarea>
+        <br>
+        <button type="submit">Save Changes</button>
+    </form>
+{% endblock %}
+
+<!-- Include jQuery library -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Update comment form -->
+<form id="updateCommentForm" method="post" action="{% url 'update_comment' comment.id %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Update Comment">
+</form>
+
+<!-- JavaScript to handle AJAX form submission and update -->
+<script>
+    // Function to handle comment update using AJAX
+    function updateComment() {
+        const form = $('#updateCommentForm');
+
+        $.post(
+            form.attr('action'),
+            form.serialize(),
+            function (data) {
+                if (data.success) {
+                    // Update the comment section with the new comment content
+                    const commentSection = $('#comment-section');
+                    const commentDiv = $(`
+                        <div class="media">
+                            <!-- Render the updated comment here using data.comment -->
+                        </div>
+                    `);
+                    commentSection.prepend(commentDiv);
+                } else {
+                    // Display error message if update failed
+                    alert(data.msg);
+                }
+            }
+        );
+    }
+
+    // Submit the comment update form on button click
+    $('#updateCommentForm').submit(function (event) {
+        event.preventDefault();
+        updateComment();
+    });
+</script>
