@@ -2,7 +2,6 @@
 """
 Django settings for django_reddit project.
 
-
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
@@ -15,6 +14,7 @@ env = environ.Env()
 
 # APP CONFIGURATION
 # ------------------------------------------------------------------------------
+
 DJANGO_APPS = (
     # Default Django apps:
     'django.contrib.auth',
@@ -23,17 +23,17 @@ DJANGO_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    
     # Useful template tags:
     'django.contrib.humanize',
-
+    
     # Admin
     'django.contrib.admin',
 )
+
 THIRD_PARTY_APPS = (
     'widget_tweaks',
     'mptt',
-    # Insert your thirdy party apps here
 )
 
 # Apps specific for this project go here.
@@ -41,7 +41,7 @@ LOCAL_APPS = (
     'users',
     'reddit',
     'comments',
-    'submissions'
+    'submissions',
     # Your stuff: custom apps go here
 )
 
@@ -50,7 +50,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 # MIDDLEWARE CONFIGURATION
 # ------------------------------------------------------------------------------
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     # Make sure djangosecure.middleware.SecurityMiddleware is listed first
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,6 +152,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Your stuff: custom template context processors go here
             ],
+            'libraries': {
+                'staticfiles': 'django.templatetags.static',
+            },
         },
     },
 ]
@@ -203,3 +206,4 @@ ADMIN_URL = r'^admin/'
 LOGIN_URL = '/login/'
 
 # Your common stuff: Below this line define 3rd party library settings
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
